@@ -7,21 +7,21 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Card: React.FC<CardProps> = ({
   children,
-  variant = 'glass',
-  hoverEffect = false,
+  variant = 'default',
+  hoverEffect = true,
   className = '',
   ...props
 }) => {
-  const baseStyles = 'rounded-2xl p-6 transition-all duration-300 backdrop-blur-md';
+  const baseStyles = 'rounded-3xl p-6 transition-all duration-300 bg-white text-gray-900 shadow-xl shadow-green-900/5';
 
   const variantStyles = {
-    default: 'bg-slate-900/90 text-slate-100 border border-slate-800 shadow-xl',
-    glass: 'bg-gradient-to-b from-slate-900/80 to-slate-950/90 text-slate-100 border border-emerald-500/20 shadow-2xl shadow-emerald-950/20',
-    bordered: 'bg-slate-950 text-slate-100 border border-emerald-900/50',
+    default: 'bg-white border-2 border-[#E8F5E9]',
+    glass: 'bg-white border-2 border-[#1B5E20]/20 shadow-xl shadow-[#1B5E20]/5',
+    bordered: 'bg-white border-2 border-[#1B5E20]',
   };
 
   const hoverStyles = hoverEffect
-    ? 'hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-emerald-900/30'
+    ? 'hover:-translate-y-1 hover:border-[#1B5E20] hover:shadow-2xl hover:shadow-[#1B5E20]/10'
     : '';
 
   return (

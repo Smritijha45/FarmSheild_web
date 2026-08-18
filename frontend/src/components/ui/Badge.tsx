@@ -14,36 +14,36 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center gap-1.5 font-semibold rounded-full border shadow-sm transition-colors';
+  const baseStyles = 'inline-flex items-center gap-1.5 font-black rounded-full border-2 shadow-sm transition-colors tracking-wide';
 
   const sizeStyles = {
-    sm: 'px-2.5 py-0.5 text-[10px]',
-    md: 'px-3 py-1 text-xs',
-    lg: 'px-3.5 py-1.5 text-sm',
+    sm: 'px-3 py-1 text-xs',
+    md: 'px-4 py-1.5 text-sm',
+    lg: 'px-5 py-2 text-base',
   };
 
   const variantStyles = {
-    success: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40',
-    warning: 'bg-amber-950/80 text-amber-300 border-amber-500/40',
-    error: 'bg-rose-950/80 text-rose-300 border-rose-500/40',
-    info: 'bg-sky-950/80 text-sky-300 border-sky-500/40',
-    neutral: 'bg-slate-800/80 text-slate-300 border-slate-700/40',
+    success: 'bg-[#E8F5E9] text-[#1B5E20] border-[#1B5E20]',
+    warning: 'bg-[#FFF8E1] text-[#B78103] border-[#FFC107]',
+    error: 'bg-[#FFEBEE] text-[#D32F2F] border-[#D32F2F]',
+    info: 'bg-[#E8F5E9] text-[#1B5E20] border-[#1B5E20]',
+    neutral: 'bg-gray-100 text-gray-800 border-gray-300',
   };
 
   const pulseColor = {
-    success: 'bg-emerald-400',
-    warning: 'bg-amber-400',
-    error: 'bg-rose-400',
-    info: 'bg-sky-400',
-    neutral: 'bg-slate-400',
+    success: 'bg-[#1B5E20]',
+    warning: 'bg-[#FFC107]',
+    error: 'bg-[#D32F2F]',
+    info: 'bg-[#1B5E20]',
+    neutral: 'bg-gray-500',
   };
 
   return (
     <span className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`} {...props}>
       {pulse && (
-        <span className="relative flex h-2 w-2">
+        <span className="relative flex h-2.5 w-2.5 shrink-0">
           <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${pulseColor[variant]}`}></span>
-          <span className={`relative inline-flex rounded-full h-2 w-2 ${pulseColor[variant]}`}></span>
+          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${pulseColor[variant]}`}></span>
         </span>
       )}
       <span>{children}</span>

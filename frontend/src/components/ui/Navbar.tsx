@@ -1,43 +1,102 @@
-import React from 'react';
-import { ShieldCheck, Activity, Database, Server } from 'lucide-react';
-import { Badge } from './Badge';
+'use client';
 
-export const Navbar: React.FC = () => {
+import React from 'react';
+import { ShieldCheck, UserCheck, Stethoscope, Settings, QrCode } from 'lucide-react';
+import { LanguageSelector } from '../LanguageSelector';
+import { useLanguage } from '../../providers/LanguageProvider';
+
+export type UserRoleMode = 'farmer' | 'vet' | 'admin' | 'qr_scanner';
+
+interface NavbarProps {
+  currentRole?: UserRoleMode;
+  onRoleChange?: (role: UserRoleMode) => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({
+  currentRole = 'farmer',
+  onRoleChange,
+}) => {
+  const { t } = useLanguage();
+
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-emerald-900/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-white border-b-2 border-[#1B5E20]/20 shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
         {/* Brand Logo */}
-        <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-900/40 border border-emerald-400/30">
-            <ShieldCheck className="w-6 h-6 text-slate-950 stroke-[2.5]" />
+        <div
+          className="flex items-center space-x-3 cursor-pointer select-none"
+          onClick={() => onRoleChange?.('farmer')}
+        >
+          <div className="w-12 h-12 rounded-2xl bg-[#1B5E20] flex items-center justify-center shadow-lg text-white">
+            <ShieldCheck className="w-7 h-7 stroke-[2.5]" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
-                FarmSheild
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-[#1B5E20]">
+                {t('nav.brand')}
               </span>
-              <Badge variant="success" pulse size="sm">
-                Foundation v1.0
-              </Badge>
             </div>
-            <p className="text-xs text-slate-400 font-medium">Digital Farm & Health Portal</p>
+            <p className="text-xs text-[#1B5E20] font-bold hidden sm:block">
+              {t('nav.tagline')}
+            </p>
           </div>
         </div>
 
-        {/* Status Indicators */}
-        <div className="hidden md:flex items-center space-x-6 text-xs text-slate-300 font-medium">
-          <div className="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800">
-            <Server className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Next.js Frontend</span>
+        {/* Role Switcher Tabs */}
+        {onRoleChange && (
+          <div className="hidden lg:flex items-center bg-[#E8F5E9] border-2 border-[#1B5E20]/30 p-1.5 rounded-2xl gap-1 text-xs font-black">
+            <button
+              onClick={() => onRoleChange('farmer')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all ${
+                currentRole === 'farmer'
+                  ? 'bg-[#1B5E20] text-white shadow-md'
+                  : 'text-[#1B5E20] hover:bg-white'
+              }`}
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>{t('nav.farmerRole')}</span>
+            </button>
+
+            <button
+              onClick={() => onRoleChange('vet')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all ${
+                currentRole === 'vet'
+                  ? 'bg-[#1B5E20] text-white shadow-md'
+                  : 'text-[#1B5E20] hover:bg-white'
+              }`}
+            >
+              <Stethoscope className="w-4 h-4" />
+              <span>{t('nav.vetRole')}</span>
+            </button>
+
+            <button
+              onClick={() => onRoleChange('admin')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all ${
+                currentRole === 'admin'
+                  ? 'bg-[#1B5E20] text-white shadow-md'
+                  : 'text-[#1B5E20] hover:bg-white'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              <span>{t('nav.adminRole')}</span>
+            </button>
+
+            <button
+              onClick={() => onRoleChange('qr_scanner')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all ${
+                currentRole === 'qr_scanner'
+                  ? 'bg-[#1B5E20] text-white shadow-md'
+                  : 'text-[#1B5E20] hover:bg-white'
+              }`}
+            >
+              <QrCode className="w-4 h-4" />
+              <span>{t('nav.qrScan')}</span>
+            </button>
           </div>
-          <div className="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800">
-            <Activity className="w-3.5 h-3.5 text-teal-400" />
-            <span>Express API</span>
-          </div>
-          <div className="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800">
-            <Database className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Supabase DB</span>
-          </div>
+        )}
+
+        {/* Global Language Selector */}
+        <div className="flex items-center space-x-2">
+          <LanguageSelector />
         </div>
       </div>
     </header>

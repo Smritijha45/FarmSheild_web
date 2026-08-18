@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const supabase_js_1 = require("../config/supabase.js");
+const supabase_1 = require("../config/supabase");
 const router = (0, express_1.Router)();
 /**
  * @route GET /api/health
@@ -9,9 +9,8 @@ const router = (0, express_1.Router)();
  * @access Public
  */
 router.get('/health', async (_req, res) => {
-    const supabaseConfigured = (0, supabase_js_1.isSupabaseConfigured)();
-    const supabaseConnection = await (0, supabase_js_1.testSupabaseConnection)();
-    const isHealthy = true; // Express backend is operational
+    const supabaseConfigured = (0, supabase_1.isSupabaseConfigured)();
+    const supabaseConnection = await (0, supabase_1.testSupabaseConnection)();
     res.status(200).json({
         status: 'online',
         appName: 'FarmSheild Backend API',

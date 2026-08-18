@@ -1,122 +1,216 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Navbar, UserRoleMode } from '../components/ui/Navbar';
+import { FarmerHome } from '../components/farmer/FarmerHome';
+import { AnimalList, AnimalItem } from '../components/farmer/AnimalList';
+import { TreatmentModal } from '../components/farmer/TreatmentModal';
+import { MilkSafetyCheck } from '../components/farmer/MilkSafetyCheck';
+import { WarningsList } from '../components/farmer/WarningsList';
+import { QRScannerModal } from '../components/farmer/QRScannerModal';
+import { VetDashboard } from '../components/vet/VetDashboard';
+import { AdminDashboard } from '../components/admin/AdminDashboard';
 import { ConnectionStatus } from '../components/ConnectionStatus';
-import { ShieldCheck, Cpu, Database, CheckCircle2, ArrowRight, Zap, Lock, FileCode2 } from 'lucide-react';
-import { Badge } from '../components/ui/Badge';
-import { Card } from '../components/ui/Card';
+import { useLanguage } from '../providers/LanguageProvider';
 
 export default function Home() {
+  const { t } = useLanguage();
+  const [roleMode, setRoleMode] = useState<UserRoleMode>('farmer');
+  const [farmerView, setFarmerView] = useState<'home' | 'animals' | 'treatment' | 'milk_safety' | 'alerts' | 'history' | 'qr_scan'>('home');
+  const [selectedQrToken, setSelectedQrToken] = useState<string>('');
+
+  // Initial Animals State
+  const [animals, setAnimals] = useState<AnimalItem[]>([
+    {
+      id: 'a101',
+      animal_code: 'COW-101',
+      species: 'cow',
+      breed: 'Gir',
+      dob: '2022-03-15',
+      sex: 'female',
+      weight: 380,
+      purpose: 'milk',
+      health_status: 'healthy',
+      qr_token: 'QR-COW-101',
+    },
+    {
+      id: 'a102',
+      animal_code: 'COW-102',
+      species: 'cow',
+      breed: 'HF Cross',
+      dob: '2021-08-10',
+      sex: 'female',
+      weight: 430,
+      purpose: 'milk',
+      health_status: 'under_treatment',
+      qr_token: 'QR-COW-102',
+    },
+    {
+      id: 'a103',
+      animal_code: 'BUF-201',
+      species: 'buffalo',
+      breed: 'Murrah',
+      dob: '2020-05-20',
+      sex: 'female',
+      weight: 510,
+      purpose: 'milk',
+      health_status: 'healthy',
+      qr_token: 'QR-BUF-201',
+    },
+  ]);
+
+  const fetchAnimals = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/animals');
+      const json = await res.json();
+      if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+        setAnimals(json.data);
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  useEffect(() => {
+    fetchAnimals();
+  }, []);
+
+  const handleAddAnimal = (newAnimalData: Omit<AnimalItem, 'id' | 'qr_token' | 'health_status'>) => {
+    const qrToken = `QR-${newAnimalData.animal_code.toUpperCase().replace(/\s+/g, '-')}`;
+    const newAnimal: AnimalItem = {
+      ...newAnimalData,
+      id: `a_${Date.now()}`,
+      qr_token: qrToken,
+      health_status: 'healthy',
+    };
+
+    setAnimals((prev) => [newAnimal, ...prev]);
+
+    fetch('http://localhost:5000/api/animals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newAnimalData),
+    }).catch(() => {});
+  };
+
+  const handleSelectAnimalForQr = (token: string) => {
+    setSelectedQrToken(token);
+    setFarmerView('qr_scan');
+  };
+
+  // Live Stats calculation
+  const totalAnimals = animals.length;
+  const underTreatment = animals.filter((a) => a.health_status === 'under_treatment' || a.health_status === 'sick').length;
+  const underWithdrawal = animals.filter((a) => a.health_status === 'under_treatment').length;
+  const clearedCount = totalAnimals - underWithdrawal;
+
   return (
-    <div className="min-h-[calc(100vh-5rem)] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-16">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col justify-between selection:bg-[#1B5E20] selection:text-white font-sans">
+      <div>
+        <Navbar
+          currentRole={roleMode}
+          onRoleChange={(newRole) => {
+            setRoleMode(newRole);
+            if (newRole === 'qr_scanner') setFarmerView('qr_scan');
+            else if (newRole === 'farmer') setFarmerView('home');
+          }}
+        />
 
-        {/* Hero Header Section */}
-        <div className="text-center space-y-6 max-w-3xl mx-auto pt-4">
-          <div className="inline-flex items-center gap-2">
-            <Badge variant="success" pulse>
-              Phase 1 Monorepo Foundation
-            </Badge>
-          </div>
+        <main className="py-6">
+          {/* VETERINARIAN ROLE MODE */}
+          {roleMode === 'vet' && <VetDashboard />}
 
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent leading-tight">
-            Digital Farm Management Portal
-          </h1>
+          {/* ADMIN ROLE MODE */}
+          {roleMode === 'admin' && <AdminDashboard />}
 
-          <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
-            Welcome to <span className="text-emerald-400 font-semibold">FarmSheild</span>. Built on Next.js, Express REST API, and Supabase PostgreSQL database layer.
-          </p>
+          {/* PUBLIC QR SCANNER MODE */}
+          {roleMode === 'qr_scanner' && (
+            <QRScannerModal
+              initialToken={selectedQrToken}
+              onBack={() => {
+                setRoleMode('farmer');
+                setFarmerView('home');
+              }}
+            />
+          )}
 
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            <div className="flex items-center space-x-2 text-xs font-mono bg-slate-900/90 text-emerald-300 px-3.5 py-2 rounded-xl border border-emerald-500/20">
-              <Zap className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Next.js App Router</span>
-            </div>
-            <div className="flex items-center space-x-2 text-xs font-mono bg-slate-900/90 text-teal-300 px-3.5 py-2 rounded-xl border border-teal-500/20">
-              <Cpu className="w-3.5 h-3.5 text-teal-400" />
-              <span>Express TypeScript REST API</span>
-            </div>
-            <div className="flex items-center space-x-2 text-xs font-mono bg-slate-900/90 text-emerald-300 px-3.5 py-2 rounded-xl border border-emerald-500/20">
-              <Database className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Supabase PostgreSQL & Auth</span>
-            </div>
-          </div>
-        </div>
+          {/* FARMER ROLE MODE */}
+          {roleMode === 'farmer' && (
+            <>
+              {farmerView === 'home' && (
+                <div className="space-y-12">
+                  <FarmerHome
+                    onNavigate={(view) => setFarmerView(view)}
+                    stats={{
+                      totalAnimals,
+                      underTreatment,
+                      underWithdrawal,
+                      clearedCount,
+                    }}
+                  />
 
-        {/* Live End-to-End Connectivity Diagnostic Widget */}
-        <section id="verification" className="space-y-4">
-          <ConnectionStatus />
-        </section>
+                  {/* Architecture Health Verification Widget */}
+                  <div className="max-w-5xl mx-auto px-4 pt-6">
+                    <ConnectionStatus />
+                  </div>
+                </div>
+              )}
 
-        {/* Foundation Feature Stack Overview */}
-        <section className="space-y-6 pt-4">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-white">Monorepo Setup & Features Ready</h2>
-            <p className="text-sm text-slate-400">Core architectural components configured for modular expansion</p>
-          </div>
+              {farmerView === 'animals' && (
+                <AnimalList
+                  animals={animals}
+                  onAddAnimal={handleAddAnimal}
+                  onSelectAnimalForQr={handleSelectAnimalForQr}
+                  onBack={() => setFarmerView('home')}
+                />
+              )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card variant="glass" hoverEffect>
-              <div className="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4">
-                <FileCode2 className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Clean Monorepo Structure</h3>
-              <p className="text-xs text-slate-300 leading-relaxed mb-4">
-                Strict decoupling with <code className="text-emerald-400 bg-slate-900 px-1.5 py-0.5 rounded">/frontend</code> and <code className="text-emerald-400 bg-slate-900 px-1.5 py-0.5 rounded">/backend</code> workspaces.
-              </p>
-              <ul className="text-xs space-y-2 text-slate-400">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>TypeScript strict type checking</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>ESLint code quality enforcement</span>
-                </li>
-              </ul>
-            </Card>
+              {farmerView === 'treatment' && (
+                <TreatmentModal
+                  animals={animals}
+                  onBack={() => setFarmerView('home')}
+                  onSuccess={() => {
+                    fetchAnimals();
+                    setFarmerView('milk_safety');
+                  }}
+                />
+              )}
 
-            <Card variant="glass" hoverEffect>
-              <div className="w-10 h-10 rounded-xl bg-teal-950/80 border border-teal-500/30 flex items-center justify-center text-teal-400 mb-4">
-                <Lock className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Express API Middleware</h3>
-              <p className="text-xs text-slate-300 leading-relaxed mb-4">
-                Production-grade Express middleware pipeline ready for REST endpoint expansion.
-              </p>
-              <ul className="text-xs space-y-2 text-slate-400">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                  <span>CORS & Helmet HTTP security</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                  <span>Centralized JSON error handling</span>
-                </li>
-              </ul>
-            </Card>
+              {farmerView === 'milk_safety' && (
+                <MilkSafetyCheck onBack={() => setFarmerView('home')} />
+              )}
 
-            <Card variant="glass" hoverEffect>
-              <div className="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4">
-                <Database className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Supabase PostgreSQL Schema</h3>
-              <p className="text-xs text-slate-300 leading-relaxed mb-4">
-                Database schema defined with Row Level Security (RLS) policies and trigger functions.
-              </p>
-              <ul className="text-xs space-y-2 text-slate-400">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>12 relational SQL tables defined</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>Supabase JS Client initialized</span>
-                </li>
-              </ul>
-            </Card>
-          </div>
-        </section>
+              {farmerView === 'alerts' && (
+                <WarningsList onBack={() => setFarmerView('home')} />
+              )}
 
+              {farmerView === 'history' && (
+                <TreatmentModal
+                  animals={animals}
+                  onBack={() => setFarmerView('home')}
+                  onSuccess={() => setFarmerView('home')}
+                />
+              )}
+
+              {farmerView === 'qr_scan' && (
+                <QRScannerModal
+                  initialToken={selectedQrToken}
+                  onBack={() => setFarmerView('home')}
+                />
+              )}
+            </>
+          )}
+        </main>
       </div>
+
+      <footer className="border-t-2 border-[#1B5E20]/20 bg-white py-6 text-center text-xs text-gray-700 font-bold">
+        <div className="max-w-7xl mx-auto px-4 space-y-1">
+          <p className="font-black text-[#1B5E20]">© 2026 FarmSheild Digital Farm Portal • Built for Smart India Hackathon (SIH)</p>
+          <p className="text-[11px] text-gray-600 font-bold">
+            FSSAI Reference Standards • Express REST API + Supabase PostgreSQL
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -4,22 +4,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const health_js_1 = __importDefault(require("./health.js"));
+const health_1 = __importDefault(require("./health"));
+const animals_1 = __importDefault(require("./animals"));
+const treatments_1 = __importDefault(require("./treatments"));
+const withdrawals_1 = __importDefault(require("./withdrawals"));
+const alerts_1 = __importDefault(require("./alerts"));
+const amu_1 = __importDefault(require("./amu"));
+const medicines_1 = __importDefault(require("./medicines"));
 const router = (0, express_1.Router)();
-// Mount Health Check Routes
-router.use('/', health_js_1.default);
-// V1 Modular Router Placeholder
-const v1Router = (0, express_1.Router)();
-v1Router.get('/info', (_req, res) => {
-    res.json({
-        name: 'FarmSheild REST API',
-        version: 'v1',
-        description: 'Digital Farm Management & Veterinary Compliance API',
-        endpoints: [
-            'GET /api/health',
-            'GET /api/v1/info'
-        ]
-    });
-});
-router.use('/v1', v1Router);
+// Health Check
+router.use('/', health_1.default);
+// REST API Modular Mounts
+router.use('/', animals_1.default);
+router.use('/', treatments_1.default);
+router.use('/', withdrawals_1.default);
+router.use('/', alerts_1.default);
+router.use('/', amu_1.default);
+router.use('/', medicines_1.default);
 exports.default = router;

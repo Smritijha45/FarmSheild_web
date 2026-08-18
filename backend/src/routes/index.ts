@@ -1,26 +1,23 @@
 import { Router } from 'express';
 import healthRouter from './health';
+import animalsRouter from './animals';
+import treatmentsRouter from './treatments';
+import withdrawalsRouter from './withdrawals';
+import alertsRouter from './alerts';
+import amuRouter from './amu';
+import medicinesRouter from './medicines';
 
 const router = Router();
 
-// Mount Health Check Routes
+// Health Check
 router.use('/', healthRouter);
 
-// V1 Modular Router Placeholder
-const v1Router = Router();
-
-v1Router.get('/info', (_req, res) => {
-  res.json({
-    name: 'FarmSheild REST API',
-    version: 'v1',
-    description: 'Digital Farm Management & Veterinary Compliance API',
-    endpoints: [
-      'GET /api/health',
-      'GET /api/v1/info'
-    ]
-  });
-});
-
-router.use('/v1', v1Router);
+// REST API Modular Mounts
+router.use('/', animalsRouter);
+router.use('/', treatmentsRouter);
+router.use('/', withdrawalsRouter);
+router.use('/', alertsRouter);
+router.use('/', amuRouter);
+router.use('/', medicinesRouter);
 
 export default router;
